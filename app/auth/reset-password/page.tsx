@@ -7,20 +7,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Mail, ArrowLeft, CircleCheck as CheckCircle } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // TODO: Implement Supabase password reset
-    setTimeout(() => {
+    setError('');
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    });
+
+    if (error) {
+      setError(error.message);
+      setIsLoading(false);
+    } else {
       setIsLoading(false);
       setSubmitted(true);
-    }, 1000);
+    }
   };
 
   if (submitted) {

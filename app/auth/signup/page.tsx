@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Mail, Lock, User, Chrome, Check } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,14 +16,63 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const router = useRouter();
+  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) return;
     setIsLoading(true);
-    // TODO: Implement Supabase auth
-    setTimeout(() => setIsLoading(false), 1000);
+    setError('');
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      setError(error.message);
+      setIsLoading(false);
+    } else {
+      setSuccess(true);
+      setIsLoading(false);
+    }
   };
+
+  const handleGoogleSignup = async () => {
+    setIsLoading(true);
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+  };
+
+  if (success) {
+    return (
+      <Card className="p-8 space-y-6 text-center">
+        <div className="text-5xl">📧</div>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold">Check Your Email</h1>
+          <p className="text-muted-foreground">
+            We sent a confirmation link to <strong>{email}</strong>. Click the link to activate your account.
+          </p>
+        </div>
+        <Link href="/auth/login">
+          <Button variant="outline" size="lg" className="w-full">
+            Back to Sign In
+          </Button>
+        </Link>
+      </Card>
+    );
+  }
 
   const passwordsMatch = password && confirmPassword && password === confirmPassword;
 
@@ -32,8 +83,14 @@ export default function SignupPage() {
         <p className="text-muted-foreground">Start tracking your cat's health today</p>
       </div>
 
+      {error && (
+        <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
+          {error}
+        </div>
+      )}
+
       {/* Google OAuth Button */}
-      <Button variant="outline" size="lg" className="w-full gap-2" disabled={isLoading}>
+      <Button variant="outline" size="lg" className="w-full gap-2" disabled={isLoading} onClick={handleGoogleSignup}>
         <Chrome className="w-5 h-5" />
         Sign up with Google
       </Button>
