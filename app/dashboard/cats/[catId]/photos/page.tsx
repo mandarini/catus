@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Image as ImageIcon, X } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,9 +23,25 @@ export default function PhotosPage({ params }: { params: { catId: string } }) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [caption, setCaption] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [photos, setPhotos] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const supabase = createClient();
 
-  // TODO: Fetch photos from Supabase
-  const photos: any[] = [];
+  const fetchPhotos = async () => {
+    const { data, error } = await supabase
+      .from('photos')
+      .select('*')
+      .eq('cat_id', params.catId)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setPhotos(data);
+    }
+  };
+
+  useEffect(() => {
+    fetchPhotos();
+  }, [params.catId]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -35,14 +52,52 @@ export default function PhotosPage({ params }: { params: { catId: string } }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // TODO: Upload to Supabase Storage
-    setTimeout(() => {
-      setIsLoading(false);
+    setError(null);
+
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('You must be logged in to upload photos.');
+      }
+
+      for (const file of selectedFiles) {
+        const timestamp = Date.now();
+        const path = `${user.id}/${params.catId}/${timestamp}-${file.name}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('cat-photos')
+          .upload(path, file);
+
+        if (uploadError) {
+          throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('cat-photos')
+          .getPublicUrl(path);
+
+        const { error: insertError } = await supabase.from('photos').insert({
+          cat_id: params.catId,
+          url: publicUrlData.publicUrl,
+          caption: caption || null,
+          taken_at: date || null,
+        });
+
+        if (insertError) {
+          throw new Error(`Failed to save photo record: ${insertError.message}`);
+        }
+      }
+
+      await fetchPhotos();
       setOpen(false);
       setSelectedFiles([]);
       setCaption('');
       setDate(new Date().toISOString().split('T')[0]);
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during upload.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -130,6 +185,10 @@ export default function PhotosPage({ params }: { params: { catId: string } }) {
                   />
                 </div>
 
+                {error && (
+                  <p className="text-sm text-destructive">{error}</p>
+                )}
+
                 <div className="flex gap-3 pt-4">
                   <Button variant="outline" className="flex-1" onClick={() => setOpen(false)}>
                     Cancel
@@ -152,8 +211,8 @@ export default function PhotosPage({ params }: { params: { catId: string } }) {
           </Card>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {photos.map((photo: any, i: number) => (
-              <Card key={i} className="overflow-hidden hover:border-primary transition-colors group cursor-pointer">
+            {photos.map((photo: any) => (
+              <Card key={photo.id} className="overflow-hidden hover:border-primary transition-colors group cursor-pointer">
                 <div className="relative overflow-hidden bg-muted h-48">
                   {photo.url ? (
                     <img
@@ -167,10 +226,10 @@ export default function PhotosPage({ params }: { params: { catId: string } }) {
                     </div>
                   )}
                 </div>
-                {photo.caption && (
+                {(photo.caption || photo.taken_at) && (
                   <div className="p-3">
-                    <p className="text-sm font-semibold">{photo.caption}</p>
-                    {photo.takenAt && <p className="text-xs text-muted-foreground">{photo.takenAt}</p>}
+                    {photo.caption && <p className="text-sm font-semibold">{photo.caption}</p>}
+                    {photo.taken_at && <p className="text-xs text-muted-foreground">{photo.taken_at}</p>}
                   </div>
                 )}
               </Card>

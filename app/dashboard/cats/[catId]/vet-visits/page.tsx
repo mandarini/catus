@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Stethoscope } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,13 +32,44 @@ export default function VetVisitsPage({ params }: { params: { catId: string } })
     notes: '',
   });
 
-  const visits: any[] = [];
+  const [visits, setVisits] = useState<any[]>([]);
+  const supabase = createClient();
+
+  const fetchVisits = async () => {
+    const { data, error } = await supabase
+      .from('vet_visits')
+      .select('*')
+      .eq('cat_id', params.catId)
+      .order('visit_date', { ascending: false });
+
+    if (!error && data) {
+      setVisits(data);
+    }
+  };
+
+  useEffect(() => {
+    fetchVisits();
+  }, [params.catId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+
+    const { error } = await supabase.from('vet_visits').insert({
+      cat_id: params.catId,
+      visit_date: formData.visitDate,
+      vet_name: formData.vetName || null,
+      clinic_name: formData.clinicName || null,
+      reason: formData.reason,
+      diagnosis: formData.diagnosis || null,
+      treatment: formData.treatment || null,
+      cost: formData.cost ? parseFloat(formData.cost) : null,
+      follow_up_date: formData.followUpDate || null,
+      notes: formData.notes || null,
+    });
+
+    if (!error) {
+      await fetchVisits();
       setOpen(false);
       setFormData({
         visitDate: new Date().toISOString().split('T')[0],
@@ -50,7 +82,9 @@ export default function VetVisitsPage({ params }: { params: { catId: string } })
         followUpDate: '',
         notes: '',
       });
-    }, 1000);
+    }
+
+    setIsLoading(false);
   };
 
   return (
@@ -192,26 +226,26 @@ export default function VetVisitsPage({ params }: { params: { catId: string } })
         ) : (
           <div className="space-y-4">
             {visits.map((visit: any, i: number) => (
-              <Card key={i} className="p-6 hover:border-primary transition-colors">
+              <Card key={visit.id ?? i} className="p-6 hover:border-primary transition-colors">
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-lg font-bold">{visit.reason}</h3>
-                    <p className="text-sm text-muted-foreground">{visit.visitDate}</p>
+                    <p className="text-sm text-muted-foreground">{visit.visit_date}</p>
                   </div>
                   {visit.cost && <p className="font-semibold">${visit.cost}</p>}
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                  {visit.vetName && (
+                  {visit.vet_name && (
                     <div>
                       <p className="text-muted-foreground">Vet</p>
-                      <p className="font-semibold">{visit.vetName}</p>
+                      <p className="font-semibold">{visit.vet_name}</p>
                     </div>
                   )}
-                  {visit.clinicName && (
+                  {visit.clinic_name && (
                     <div>
                       <p className="text-muted-foreground">Clinic</p>
-                      <p className="font-semibold">{visit.clinicName}</p>
+                      <p className="font-semibold">{visit.clinic_name}</p>
                     </div>
                   )}
                   {visit.diagnosis && (

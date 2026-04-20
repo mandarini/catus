@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Mail, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,26 +26,109 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { createClient } from '@/lib/supabase/client';
 
 export default function SettingsPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [displayName, setDisplayName] = useState('User');
-  const [email, setEmail] = useState('user@example.com');
+  const router = useRouter();
+  const supabase = createClient();
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
   const [weightUnit, setWeightUnit] = useState('kg');
   const [isSaving, setIsSaving] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          router.push('/login');
+          return;
+        }
+
+        setEmail(user.email ?? '');
+
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          setFeedback({ type: 'error', message: 'Failed to load profile.' });
+        } else if (profile) {
+          setDisplayName(profile.display_name ?? '');
+          setWeightUnit(profile.preferred_weight_unit ?? 'kg');
+        }
+      } catch {
+        setFeedback({ type: 'error', message: 'An unexpected error occurred.' });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    // TODO: Save to Supabase
-    setTimeout(() => setIsSaving(false), 1000);
+    setFeedback(null);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          display_name: displayName,
+          preferred_weight_unit: weightUnit,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        setFeedback({ type: 'error', message: 'Failed to save changes.' });
+      } else {
+        setFeedback({ type: 'success', message: 'Changes saved successfully.' });
+      }
+    } catch {
+      setFeedback({ type: 'error', message: 'An unexpected error occurred.' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogout = async () => {
     setIsLoading(true);
-    // TODO: Logout from Supabase
-    setTimeout(() => setIsLoading(false), 1000);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setFeedback({ type: 'error', message: 'Failed to sign out.' });
+      setIsLoading(false);
+      return;
+    }
+    router.push('/login');
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-8">
+        <div className="max-w-2xl mx-auto space-y-8">
+          <div>
+            <h1 className="text-4xl font-bold">Settings</h1>
+            <p className="text-muted-foreground mt-2">Loading your profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -53,6 +137,18 @@ export default function SettingsPage() {
           <h1 className="text-4xl font-bold">Settings</h1>
           <p className="text-muted-foreground mt-2">Manage your account and preferences</p>
         </div>
+
+        {feedback && (
+          <div
+            className={`p-4 rounded-lg text-sm ${
+              feedback.type === 'success'
+                ? 'bg-green-500/10 text-green-600 border border-green-500/20'
+                : 'bg-destructive/10 text-destructive border border-destructive/20'
+            }`}
+          >
+            {feedback.message}
+          </div>
+        )}
 
         {/* Profile Section */}
         <Card className="p-8">
@@ -119,7 +215,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <div>
                 <p className="font-semibold">Google Account</p>
-                <p className="text-sm text-muted-foreground">user@gmail.com</p>
+                <p className="text-sm text-muted-foreground">{email}</p>
               </div>
               <Badge variant="default">Connected</Badge>
             </div>

@@ -1,24 +1,68 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CreditCard as Edit, Heart, Pill, Activity, Stethoscope, Smile, BookOpen, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { createClient } from '@/lib/supabase/client';
+import type { Cat } from '@/lib/supabase/types';
 
 export default function CatProfilePage({ params }: { params: { catId: string } }) {
-  // TODO: Fetch cat data from Supabase
-  const cat = {
-    id: params.catId,
-    name: 'Whiskers',
-    breed: 'Bengal',
-    gender: 'Male',
-    dateOfBirth: '2020-05-15',
-    isNeutered: true,
-    livingFitation: 'indoor',
-    photoUrl: null,
-  };
+  const [cat, setCat] = useState<Cat | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchCat() {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('cats')
+        .select('*')
+        .eq('id', params.catId)
+        .single();
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setCat(data);
+      }
+      setLoading(false);
+    }
+
+    fetchCat();
+  }, [params.catId]);
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="max-w-4xl mx-auto flex items-center justify-center min-h-[400px]">
+          <p className="text-muted-foreground">Loading cat profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !cat) {
+    return (
+      <div className="p-8">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-primary hover:underline">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </Link>
+          <Card className="p-6 text-center">
+            <p className="text-lg font-semibold">Cat not found</p>
+            <p className="text-muted-foreground mt-1">
+              {error || 'The cat you are looking for does not exist.'}
+            </p>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   const calculateAge = (dob: string) => {
     const today = new Date();
@@ -56,9 +100,9 @@ export default function CatProfilePage({ params }: { params: { catId: string } }
           <div className="relative h-48 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20"></div>
           <div className="relative px-8 pb-8">
             <div className="flex items-end gap-6 -mt-24 mb-6">
-              {cat.photoUrl ? (
+              {cat.photo_url ? (
                 <img
-                  src={cat.photoUrl}
+                  src={cat.photo_url}
                   alt={cat.name}
                   className="w-32 h-32 rounded-lg object-cover border-4 border-card"
                 />
@@ -86,7 +130,7 @@ export default function CatProfilePage({ params }: { params: { catId: string } }
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Age</p>
-                <p className="font-semibold">{calculateAge(cat.dateOfBirth)} years</p>
+                <p className="font-semibold">{cat.date_of_birth ? `${calculateAge(cat.date_of_birth)} years` : 'Unknown'}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Gender</p>
@@ -94,13 +138,13 @@ export default function CatProfilePage({ params }: { params: { catId: string } }
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Status</p>
-                <Badge variant={cat.isNeutered ? 'default' : 'outline'}>
-                  {cat.isNeutered ? 'Neutered' : 'Not neutered'}
+                <Badge variant={cat.is_neutered ? 'default' : 'outline'}>
+                  {cat.is_neutered ? 'Neutered' : 'Not neutered'}
                 </Badge>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Living</p>
-                <p className="font-semibold capitalize">{cat.livingFitation}</p>
+                <p className="font-semibold capitalize">{cat.living_situation}</p>
               </div>
             </div>
           </div>

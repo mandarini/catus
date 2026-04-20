@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Plus } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,14 +38,54 @@ export default function FeedingPage({ params }: { params: { catId: string } }) {
     notes: '',
   });
 
-  const feedingHistory: any[] = [];
-  const currentFeeding = feedingHistory.find((f) => f.isCurrent);
+  const [feedingHistory, setFeedingHistory] = useState<any[]>([]);
+  const supabase = createClient();
+
+  const fetchFeedings = async () => {
+    const { data, error } = await supabase
+      .from('feeding')
+      .select('*')
+      .eq('cat_id', params.catId)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setFeedingHistory(data);
+    }
+  };
+
+  useEffect(() => {
+    fetchFeedings();
+  }, [params.catId]);
+
+  const currentFeeding = feedingHistory.find((f) => f.is_current);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      // Set all existing feeding records for this cat to not current
+      await supabase
+        .from('feeding')
+        .update({ is_current: false })
+        .eq('cat_id', params.catId);
+
+      // Insert new feeding record
+      const { error } = await supabase.from('feeding').insert({
+        cat_id: params.catId,
+        food_type: formData.foodType,
+        brand: formData.brand || null,
+        product_name: formData.productName || null,
+        portion_size: formData.portionSize || null,
+        feeding_schedule: formData.feedingSchedule || null,
+        started_on: formData.startedOn || null,
+        notes: formData.notes || null,
+        is_current: true,
+      });
+
+      if (error) throw error;
+
+      await fetchFeedings();
       setOpen(false);
       setFormData({
         foodType: 'dry',
@@ -55,7 +96,11 @@ export default function FeedingPage({ params }: { params: { catId: string } }) {
         startedOn: new Date().toISOString().split('T')[0],
         notes: '',
       });
-    }, 1000);
+    } catch (err) {
+      console.error('Failed to save feeding record:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -179,25 +224,25 @@ export default function FeedingPage({ params }: { params: { catId: string } }) {
           <Card className="p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
             <p className="text-muted-foreground mb-2">Current Diet</p>
             <h2 className="text-2xl font-bold mb-4">
-              {currentFeeding.brand && currentFeeding.productName
-                ? `${currentFeeding.brand} - ${currentFeeding.productName}`
+              {currentFeeding.brand && currentFeeding.product_name
+                ? `${currentFeeding.brand} - ${currentFeeding.product_name}`
                 : currentFeeding.brand || 'Custom Food'}
             </h2>
             <div className="grid sm:grid-cols-3 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Type</p>
-                <p className="font-semibold capitalize">{currentFeeding.foodType}</p>
+                <p className="font-semibold capitalize">{currentFeeding.food_type}</p>
               </div>
-              {currentFeeding.portionSize && (
+              {currentFeeding.portion_size && (
                 <div>
                   <p className="text-muted-foreground">Portion</p>
-                  <p className="font-semibold">{currentFeeding.portionSize}</p>
+                  <p className="font-semibold">{currentFeeding.portion_size}</p>
                 </div>
               )}
-              {currentFeeding.feedingSchedule && (
+              {currentFeeding.feeding_schedule && (
                 <div>
                   <p className="text-muted-foreground">Schedule</p>
-                  <p className="font-semibold">{currentFeeding.feedingSchedule}</p>
+                  <p className="font-semibold">{currentFeeding.feeding_schedule}</p>
                 </div>
               )}
             </div>
@@ -222,13 +267,13 @@ export default function FeedingPage({ params }: { params: { catId: string } }) {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <h3 className="font-semibold">
-                        {feeding.brand && feeding.productName
-                          ? `${feeding.brand} - ${feeding.productName}`
+                        {feeding.brand && feeding.product_name
+                          ? `${feeding.brand} - ${feeding.product_name}`
                           : feeding.brand || 'Custom Food'}
                       </h3>
-                      <p className="text-sm text-muted-foreground capitalize">{feeding.foodType}</p>
+                      <p className="text-sm text-muted-foreground capitalize">{feeding.food_type}</p>
                     </div>
-                    {feeding.isCurrent && <Badge>Current</Badge>}
+                    {feeding.is_current && <Badge>Current</Badge>}
                   </div>
                   {feeding.notes && <p className="text-sm text-muted-foreground">{feeding.notes}</p>}
                 </Card>

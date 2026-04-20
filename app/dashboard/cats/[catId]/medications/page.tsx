@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Pill } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,14 +33,49 @@ export default function MedicationsPage({ params }: { params: { catId: string } 
     notes: '',
   });
 
-  const currentMeds: any[] = [];
-  const pastMeds: any[] = [];
+  const [medications, setMedications] = useState<any[]>([]);
+  const supabase = createClient();
+
+  const fetchMedications = async () => {
+    const { data, error } = await supabase
+      .from('medications')
+      .select('*')
+      .eq('cat_id', params.catId)
+      .order('start_date', { ascending: false });
+
+    if (!error && data) {
+      setMedications(data);
+    }
+  };
+
+  useEffect(() => {
+    fetchMedications();
+  }, [params.catId]);
+
+  const currentMeds = medications.filter((med) => med.is_active);
+  const pastMeds = medications.filter((med) => !med.is_active);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+
+    const hasEndDate = !!formData.endDate;
+
+    const { error } = await supabase.from('medications').insert({
+      cat_id: params.catId,
+      name: formData.name,
+      dosage: formData.dosage || null,
+      frequency: formData.frequency || null,
+      start_date: formData.startDate,
+      end_date: formData.endDate || null,
+      prescribed_by: formData.prescribedBy || null,
+      reason: formData.reason || null,
+      notes: formData.notes || null,
+      is_active: !hasEndDate,
+    });
+
+    if (!error) {
+      await fetchMedications();
       setOpen(false);
       setFormData({
         name: '',
@@ -51,7 +87,9 @@ export default function MedicationsPage({ params }: { params: { catId: string } 
         reason: '',
         notes: '',
       });
-    }, 1000);
+    }
+
+    setIsLoading(false);
   };
 
   const MedicationCard = ({ med }: { med: any }) => (
@@ -76,16 +114,16 @@ export default function MedicationsPage({ params }: { params: { catId: string } 
             <p className="font-semibold">{med.reason}</p>
           </div>
         )}
-        {med.prescribedBy && (
+        {med.prescribed_by && (
           <div>
             <p className="text-muted-foreground">Prescribed by</p>
-            <p className="font-semibold">{med.prescribedBy}</p>
+            <p className="font-semibold">{med.prescribed_by}</p>
           </div>
         )}
-        {med.startDate && (
+        {med.start_date && (
           <div>
             <p className="text-muted-foreground">Started</p>
-            <p className="font-semibold">{med.startDate}</p>
+            <p className="font-semibold">{med.start_date}</p>
           </div>
         )}
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,27 +15,90 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { createClient } from '@/lib/supabase/client';
 
 export default function EditCatPage({ params }: { params: { catId: string } }) {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  // TODO: Fetch cat data from Supabase
+  const [isFetching, setIsFetching] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    name: 'Whiskers',
-    breed: 'Bengal',
-    colorMarkings: 'Orange tabby',
-    gender: 'male',
-    dateOfBirth: '2020-05-15',
-    isNeutered: true,
-    adoptionDate: '2021-01-10',
-    livingFitation: 'indoor',
+    name: '',
+    breed: '',
+    colorMarkings: '',
+    gender: 'unknown',
+    dateOfBirth: '',
+    isNeutered: false,
+    adoptionDate: '',
+    livingSituation: 'indoor',
   });
+
+  useEffect(() => {
+    async function fetchCat() {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('cats')
+        .select('*')
+        .eq('id', params.catId)
+        .single();
+
+      if (error) {
+        setError(error.message);
+      } else if (data) {
+        setFormData({
+          name: data.name,
+          breed: data.breed ?? '',
+          colorMarkings: data.color_markings ?? '',
+          gender: data.gender,
+          dateOfBirth: data.date_of_birth ?? '',
+          isNeutered: data.is_neutered,
+          adoptionDate: data.adoption_date ?? '',
+          livingSituation: data.living_situation,
+        });
+      }
+      setIsFetching(false);
+    }
+
+    fetchCat();
+  }, [params.catId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // TODO: Update cat in Supabase
-    setTimeout(() => setIsLoading(false), 1000);
+    setError(null);
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('cats')
+      .update({
+        name: formData.name,
+        breed: formData.breed || null,
+        color_markings: formData.colorMarkings || null,
+        gender: formData.gender,
+        date_of_birth: formData.dateOfBirth || null,
+        is_neutered: formData.isNeutered,
+        adoption_date: formData.adoptionDate || null,
+        living_situation: formData.livingSituation,
+      })
+      .eq('id', params.catId);
+
+    if (error) {
+      setError(error.message);
+      setIsLoading(false);
+    } else {
+      router.push(`/dashboard/cats/${params.catId}`);
+    }
   };
+
+  if (isFetching) {
+    return (
+      <div className="p-8">
+        <div className="max-w-2xl mx-auto flex items-center justify-center min-h-[400px]">
+          <p className="text-muted-foreground">Loading cat data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -50,6 +114,13 @@ export default function EditCatPage({ params }: { params: { catId: string } }) {
           <h1 className="text-4xl font-bold">Edit {formData.name}</h1>
           <p className="text-muted-foreground mt-2">Update your cat's information</p>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md text-sm">
+            {error}
+          </div>
+        )}
 
         {/* Form Card */}
         <Card className="p-8">
@@ -138,7 +209,7 @@ export default function EditCatPage({ params }: { params: { catId: string } }) {
 
                 <div className="space-y-2">
                   <Label htmlFor="living">Living Situation</Label>
-                  <Select value={formData.livingFitation} onValueChange={(value) => setFormData({ ...formData, livingFitation: value })}>
+                  <Select value={formData.livingSituation} onValueChange={(value) => setFormData({ ...formData, livingSituation: value })}>
                     <SelectTrigger id="living">
                       <SelectValue />
                     </SelectTrigger>

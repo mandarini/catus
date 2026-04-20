@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Smile } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,13 +36,36 @@ export default function TreatmentsPage({ params }: { params: { catId: string } }
     notes: '',
   });
 
-  const treatments: any[] = [];
+  const [treatments, setTreatments] = useState<any[]>([]);
+  const supabase = createClient();
+
+  const fetchTreatments = async () => {
+    const { data } = await supabase
+      .from('treatments')
+      .select('*')
+      .eq('cat_id', params.catId)
+      .order('date_administered', { ascending: false });
+    setTreatments(data ?? []);
+  };
+
+  useEffect(() => {
+    fetchTreatments();
+  }, [params.catId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    const { error } = await supabase.from('treatments').insert({
+      cat_id: params.catId,
+      treatment_type: formData.treatmentType,
+      product_name: formData.productName,
+      date_administered: formData.dateAdministered,
+      next_due_date: formData.nextDueDate || null,
+      notes: formData.notes || null,
+    });
+    setIsLoading(false);
+    if (!error) {
+      await fetchTreatments();
       setOpen(false);
       setFormData({
         treatmentType: 'flea_tick',
@@ -50,7 +74,7 @@ export default function TreatmentsPage({ params }: { params: { catId: string } }
         nextDueDate: '',
         notes: '',
       });
-    }, 1000);
+    }
   };
 
   const treatmentTypeLabels: Record<string, string> = {
@@ -173,13 +197,13 @@ export default function TreatmentsPage({ params }: { params: { catId: string } }
         ) : (
           <div className="space-y-4">
             {treatments.map((treatment: any, i: number) => {
-              const status = getStatus(treatment.nextDueDate);
+              const status = getStatus(treatment.next_due_date);
               return (
-                <Card key={i} className="p-6 hover:border-primary transition-colors">
+                <Card key={treatment.id ?? i} className="p-6 hover:border-primary transition-colors">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="text-lg font-bold">{treatment.productName}</h3>
-                      <p className="text-sm text-muted-foreground">{treatmentTypeLabels[treatment.treatmentType]}</p>
+                      <h3 className="text-lg font-bold">{treatment.product_name}</h3>
+                      <p className="text-sm text-muted-foreground">{treatmentTypeLabels[treatment.treatment_type]}</p>
                     </div>
                     <Badge variant={status.variant as any}>{status.label}</Badge>
                   </div>
@@ -187,12 +211,12 @@ export default function TreatmentsPage({ params }: { params: { catId: string } }
                   <div className="grid sm:grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">Applied</p>
-                      <p className="font-semibold">{treatment.dateAdministered}</p>
+                      <p className="font-semibold">{treatment.date_administered}</p>
                     </div>
-                    {treatment.nextDueDate && (
+                    {treatment.next_due_date && (
                       <div>
                         <p className="text-muted-foreground">Next Due</p>
-                        <p className="font-semibold">{treatment.nextDueDate}</p>
+                        <p className="font-semibold">{treatment.next_due_date}</p>
                       </div>
                     )}
                   </div>

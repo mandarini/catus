@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Plus, TrendingUp } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,21 +25,48 @@ export default function WeightPage({ params }: { params: { catId: string } }) {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
 
-  // TODO: Fetch weight logs from Supabase
-  const weightLogs: any[] = [];
-  const currentWeight = weightLogs.length > 0 ? weightLogs[0].weight : null;
+  const [weightLogs, setWeightLogs] = useState<any[]>([]);
+
+  const supabase = createClient();
+
+  const fetchWeightLogs = async () => {
+    const { data, error } = await supabase
+      .from('weight_logs')
+      .select('*')
+      .eq('cat_id', params.catId)
+      .order('recorded_at', { ascending: false });
+
+    if (!error && data) {
+      setWeightLogs(data);
+    }
+  };
+
+  useEffect(() => {
+    fetchWeightLogs();
+  }, [params.catId]);
+
+  const currentWeight = weightLogs.length > 0 ? weightLogs[0].weight_kg : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // TODO: Save to Supabase
-    setTimeout(() => {
-      setIsLoading(false);
+
+    const { error } = await supabase.from('weight_logs').insert({
+      cat_id: params.catId,
+      weight_kg: parseFloat(weight),
+      recorded_at: date,
+      notes: notes || null,
+    });
+
+    if (!error) {
+      await fetchWeightLogs();
       setOpen(false);
       setWeight('');
       setDate(new Date().toISOString().split('T')[0]);
       setNotes('');
-    }, 1000);
+    }
+
+    setIsLoading(false);
   };
 
   return (
@@ -147,11 +175,11 @@ export default function WeightPage({ params }: { params: { catId: string } }) {
             </Card>
           ) : (
             <div className="space-y-3">
-              {weightLogs.map((log: any, i: number) => (
-                <Card key={i} className="p-4 flex items-center justify-between">
+              {weightLogs.map((log: any) => (
+                <Card key={log.id} className="p-4 flex items-center justify-between">
                   <div>
-                    <p className="font-semibold">{log.weight} kg</p>
-                    <p className="text-sm text-muted-foreground">{log.date}</p>
+                    <p className="font-semibold">{log.weight_kg} kg</p>
+                    <p className="text-sm text-muted-foreground">{log.recorded_at}</p>
                   </div>
                   {log.notes && <p className="text-sm text-muted-foreground">{log.notes}</p>}
                 </Card>

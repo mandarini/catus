@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Plus, BookOpen, X } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,8 +31,24 @@ export default function JournalPage({ params }: { params: { catId: string } }) {
   });
   const [selectedTag, setSelectedTag] = useState('');
 
-  // TODO: Fetch journal entries from Supabase
-  const entries: any[] = [];
+  const [entries, setEntries] = useState<any[]>([]);
+  const supabase = createClient();
+
+  const fetchEntries = async () => {
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .eq('cat_id', params.catId)
+      .order('entry_date', { ascending: false });
+
+    if (!error && data) {
+      setEntries(data);
+    }
+  };
+
+  useEffect(() => {
+    fetchEntries();
+  }, [params.catId]);
 
   const handleAddTag = () => {
     if (formData.tagInput.trim() && !formData.tags.includes(formData.tagInput.trim())) {
@@ -53,9 +70,17 @@ export default function JournalPage({ params }: { params: { catId: string } }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // TODO: Save to Supabase
-    setTimeout(() => {
-      setIsLoading(false);
+
+    const { error } = await supabase.from('journal_entries').insert({
+      cat_id: params.catId,
+      title: formData.title || null,
+      content: formData.content,
+      entry_date: formData.entryDate,
+      tags: formData.tags.length > 0 ? formData.tags : null,
+    });
+
+    if (!error) {
+      await fetchEntries();
       setOpen(false);
       setFormData({
         title: '',
@@ -64,7 +89,9 @@ export default function JournalPage({ params }: { params: { catId: string } }) {
         tags: [],
         tagInput: '',
       });
-    }, 1000);
+    }
+
+    setIsLoading(false);
   };
 
   const filteredEntries = selectedTag
@@ -217,7 +244,7 @@ export default function JournalPage({ params }: { params: { catId: string } }) {
               <Card key={i} className="p-6 hover:border-primary transition-colors">
                 <div className="mb-3">
                   {entry.title && <h3 className="text-xl font-bold">{entry.title}</h3>}
-                  <p className="text-sm text-muted-foreground">{entry.entryDate}</p>
+                  <p className="text-sm text-muted-foreground">{entry.entry_date}</p>
                 </div>
 
                 <p className="text-foreground line-clamp-4 mb-4">{entry.content}</p>

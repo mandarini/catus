@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Calendar } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,15 +28,39 @@ export default function VaccinesPage({ params }: { params: { catId: string } }) 
     administeredBy: '',
   });
 
-  // TODO: Fetch vaccines from Supabase
-  const vaccines: any[] = [];
+  const [vaccines, setVaccines] = useState<any[]>([]);
+  const supabase = createClient();
+
+  const fetchVaccines = async () => {
+    const { data, error } = await supabase
+      .from('vaccinations')
+      .select('*')
+      .eq('cat_id', params.catId)
+      .order('date_administered', { ascending: false });
+
+    if (!error && data) {
+      setVaccines(data);
+    }
+  };
+
+  useEffect(() => {
+    fetchVaccines();
+  }, [params.catId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // TODO: Save to Supabase
-    setTimeout(() => {
-      setIsLoading(false);
+
+    const { error } = await supabase.from('vaccinations').insert({
+      cat_id: params.catId,
+      vaccine_name: formData.vaccineName,
+      date_administered: formData.dateAdministered,
+      next_due_date: formData.nextDueDate || null,
+      administered_by: formData.administeredBy || null,
+    });
+
+    if (!error) {
+      await fetchVaccines();
       setOpen(false);
       setFormData({
         vaccineName: '',
@@ -43,7 +68,9 @@ export default function VaccinesPage({ params }: { params: { catId: string } }) 
         nextDueDate: '',
         administeredBy: '',
       });
-    }, 1000);
+    }
+
+    setIsLoading(false);
   };
 
   const getStatus = (nextDueDate?: string) => {
@@ -150,28 +177,28 @@ export default function VaccinesPage({ params }: { params: { catId: string } }) 
         ) : (
           <div className="space-y-4">
             {vaccines.map((vaccine: any, i: number) => {
-              const status = getStatus(vaccine.nextDueDate);
+              const status = getStatus(vaccine.next_due_date);
               return (
-                <Card key={i} className="p-6 hover:border-primary transition-colors">
+                <Card key={vaccine.id ?? i} className="p-6 hover:border-primary transition-colors">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="text-lg font-bold">{vaccine.vaccineName}</h3>
-                      <p className="text-sm text-muted-foreground">{vaccine.dateAdministered}</p>
+                      <h3 className="text-lg font-bold">{vaccine.vaccine_name}</h3>
+                      <p className="text-sm text-muted-foreground">{vaccine.date_administered}</p>
                     </div>
                     <Badge variant={status.variant as any}>{status.label}</Badge>
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                    {vaccine.administeredBy && (
+                    {vaccine.administered_by && (
                       <div>
                         <p className="text-muted-foreground">Vet</p>
-                        <p className="font-semibold">{vaccine.administeredBy}</p>
+                        <p className="font-semibold">{vaccine.administered_by}</p>
                       </div>
                     )}
-                    {vaccine.nextDueDate && (
+                    {vaccine.next_due_date && (
                       <div>
                         <p className="text-muted-foreground">Next Due</p>
-                        <p className="font-semibold">{vaccine.nextDueDate}</p>
+                        <p className="font-semibold">{vaccine.next_due_date}</p>
                       </div>
                     )}
                   </div>
