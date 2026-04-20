@@ -1,13 +1,59 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Plus, Heart, Pill, Calendar } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function DashboardPage() {
-  // TODO: Fetch user's cats from Supabase
-  const cats: any[] = [];
+  const supabase = createClient();
+  const [cats, setCats] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchCats() {
+      const { data } = await supabase
+        .from('cats')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      setCats(data || []);
+      setLoading(false);
+    }
+    fetchCats();
+  }, []);
+
+  function catAge(dob: string | null) {
+    if (!dob) return null;
+    const birth = new Date(dob);
+    const now = new Date();
+    const years = now.getFullYear() - birth.getFullYear();
+    const months = now.getMonth() - birth.getMonth();
+    const totalMonths = years * 12 + months;
+    if (totalMonths < 12) return `${totalMonths}mo`;
+    return `${Math.floor(totalMonths / 12)}y`;
+  }
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-muted rounded w-48" />
+            <div className="h-4 bg-muted rounded w-72" />
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-64 bg-muted rounded-lg" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -52,14 +98,14 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {cats.map((cat: any) => (
+              {cats.map((cat) => (
                 <Link key={cat.id} href={`/dashboard/cats/${cat.id}`}>
                   <Card className="p-6 hover:border-primary transition-colors cursor-pointer group h-full">
                     <div className="space-y-4">
                       {/* Cat Avatar */}
-                      {cat.photoUrl ? (
+                      {cat.photo_url ? (
                         <img
-                          src={cat.photoUrl}
+                          src={cat.photo_url}
                           alt={cat.name}
                           className="w-full h-48 rounded-lg object-cover group-hover:opacity-90 transition-opacity"
                         />
@@ -72,7 +118,9 @@ export default function DashboardPage() {
                       {/* Info */}
                       <div>
                         <h3 className="text-xl font-bold">{cat.name}</h3>
-                        {cat.breed && <p className="text-sm text-muted-foreground">{cat.breed}</p>}
+                        <p className="text-sm text-muted-foreground">
+                          {[cat.breed, catAge(cat.date_of_birth)].filter(Boolean).join(' · ') || 'No details yet'}
+                        </p>
                       </div>
 
                       {/* Quick Stats */}

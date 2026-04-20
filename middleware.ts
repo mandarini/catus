@@ -34,7 +34,6 @@ export async function middleware(request: NextRequest) {
   const isAuthPage =
     pathname.startsWith('/login') ||
     pathname.startsWith('/signup') ||
-    pathname.startsWith('/reset-password') ||
     pathname.startsWith('/auth/callback');
 
   const isDashboard =

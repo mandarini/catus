@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,9 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { createClient } from '@/lib/supabase/client';
 
 export default function NewCatPage() {
+  const router = useRouter();
+  const supabase = createClient();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     breed: '',
@@ -25,14 +30,40 @@ export default function NewCatPage() {
     dateOfBirth: '',
     isNeutered: false,
     adoptionDate: '',
-    livingFitation: 'indoor',
+    livingSituation: 'indoor',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // TODO: Submit to Supabase
-    setTimeout(() => setIsLoading(false), 1000);
+    setError('');
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setError('You must be logged in.');
+      setIsLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.from('cats').insert({
+      owner_id: user.id,
+      name: formData.name,
+      breed: formData.breed || null,
+      color_markings: formData.colorMarkings || null,
+      gender: formData.gender,
+      date_of_birth: formData.dateOfBirth || null,
+      is_neutered: formData.isNeutered,
+      adoption_date: formData.adoptionDate || null,
+      living_situation: formData.livingSituation,
+    });
+
+    if (error) {
+      setError(error.message);
+      setIsLoading(false);
+    } else {
+      router.push('/dashboard');
+      router.refresh();
+    }
   };
 
   return (
@@ -52,6 +83,12 @@ export default function NewCatPage() {
 
         {/* Form Card */}
         <Card className="p-8">
+          {error && (
+            <div className="mb-6 bg-destructive/10 text-destructive text-sm p-3 rounded-md">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Info */}
             <div className="space-y-4">
@@ -134,14 +171,13 @@ export default function NewCatPage() {
                     <SelectContent>
                       <SelectItem value="yes">Yes</SelectItem>
                       <SelectItem value="no">No</SelectItem>
-                      <SelectItem value="unknown">Unknown</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="living">Living Situation</Label>
-                  <Select value={formData.livingFitation} onValueChange={(value) => setFormData({ ...formData, livingFitation: value })}>
+                  <Select value={formData.livingSituation} onValueChange={(value) => setFormData({ ...formData, livingSituation: value })}>
                     <SelectTrigger id="living">
                       <SelectValue />
                     </SelectTrigger>
