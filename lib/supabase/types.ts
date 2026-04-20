@@ -4,364 +4,613 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[];
+  | Json[]
 
-export interface Database {
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
-      profiles: {
-        Row: {
-          id: string;
-          display_name: string;
-          avatar_url: string | null;
-          preferred_weight_unit: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id: string;
-          display_name?: string;
-          avatar_url?: string | null;
-          preferred_weight_unit?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          display_name?: string;
-          avatar_url?: string | null;
-          preferred_weight_unit?: string;
-          updated_at?: string;
-        };
-      };
       cats: {
         Row: {
-          id: string;
-          owner_id: string;
-          name: string;
-          photo_url: string | null;
-          breed: string | null;
-          color_markings: string | null;
-          date_of_birth: string | null;
-          gender: string;
-          is_neutered: boolean;
-          microchip_number: string | null;
-          adoption_date: string | null;
-          living_situation: string;
-          blood_type: string | null;
-          allergies: string[] | null;
-          notes: string | null;
-          is_active: boolean;
-          created_at: string;
-          updated_at: string;
-        };
+          adoption_date: string | null
+          allergies: string[] | null
+          blood_type: string | null
+          breed: string | null
+          color_markings: string | null
+          created_at: string
+          date_of_birth: string | null
+          gender: string
+          id: string
+          is_active: boolean
+          is_neutered: boolean
+          living_situation: string
+          microchip_number: string | null
+          name: string
+          notes: string | null
+          owner_id: string
+          photo_url: string | null
+          updated_at: string
+        }
         Insert: {
-          id?: string;
-          owner_id: string;
-          name: string;
-          photo_url?: string | null;
-          breed?: string | null;
-          color_markings?: string | null;
-          date_of_birth?: string | null;
-          gender?: string;
-          is_neutered?: boolean;
-          microchip_number?: string | null;
-          adoption_date?: string | null;
-          living_situation?: string;
-          blood_type?: string | null;
-          allergies?: string[] | null;
-          notes?: string | null;
-          is_active?: boolean;
-        };
+          adoption_date?: string | null
+          allergies?: string[] | null
+          blood_type?: string | null
+          breed?: string | null
+          color_markings?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          gender?: string
+          id?: string
+          is_active?: boolean
+          is_neutered?: boolean
+          living_situation?: string
+          microchip_number?: string | null
+          name: string
+          notes?: string | null
+          owner_id: string
+          photo_url?: string | null
+          updated_at?: string
+        }
         Update: {
-          name?: string;
-          photo_url?: string | null;
-          breed?: string | null;
-          color_markings?: string | null;
-          date_of_birth?: string | null;
-          gender?: string;
-          is_neutered?: boolean;
-          microchip_number?: string | null;
-          adoption_date?: string | null;
-          living_situation?: string;
-          blood_type?: string | null;
-          allergies?: string[] | null;
-          notes?: string | null;
-          is_active?: boolean;
-          updated_at?: string;
-        };
-      };
-      weight_logs: {
-        Row: {
-          id: string;
-          cat_id: string;
-          weight_kg: number;
-          recorded_at: string;
-          notes: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          cat_id: string;
-          weight_kg: number;
-          recorded_at?: string;
-          notes?: string | null;
-        };
-        Update: {
-          weight_kg?: number;
-          recorded_at?: string;
-          notes?: string | null;
-        };
-      };
-      vaccinations: {
-        Row: {
-          id: string;
-          cat_id: string;
-          vaccine_name: string;
-          date_administered: string;
-          next_due_date: string | null;
-          administered_by: string | null;
-          batch_number: string | null;
-          notes: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          cat_id: string;
-          vaccine_name: string;
-          date_administered: string;
-          next_due_date?: string | null;
-          administered_by?: string | null;
-          batch_number?: string | null;
-          notes?: string | null;
-        };
-        Update: {
-          vaccine_name?: string;
-          date_administered?: string;
-          next_due_date?: string | null;
-          administered_by?: string | null;
-          batch_number?: string | null;
-          notes?: string | null;
-        };
-      };
-      vet_visits: {
-        Row: {
-          id: string;
-          cat_id: string;
-          visit_date: string;
-          vet_name: string | null;
-          clinic_name: string | null;
-          reason: string;
-          diagnosis: string | null;
-          treatment: string | null;
-          cost: number | null;
-          follow_up_date: string | null;
-          documents: string[] | null;
-          notes: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          cat_id: string;
-          visit_date: string;
-          vet_name?: string | null;
-          clinic_name?: string | null;
-          reason: string;
-          diagnosis?: string | null;
-          treatment?: string | null;
-          cost?: number | null;
-          follow_up_date?: string | null;
-          documents?: string[] | null;
-          notes?: string | null;
-        };
-        Update: {
-          visit_date?: string;
-          vet_name?: string | null;
-          clinic_name?: string | null;
-          reason?: string;
-          diagnosis?: string | null;
-          treatment?: string | null;
-          cost?: number | null;
-          follow_up_date?: string | null;
-          documents?: string[] | null;
-          notes?: string | null;
-        };
-      };
-      medications: {
-        Row: {
-          id: string;
-          cat_id: string;
-          name: string;
-          dosage: string;
-          frequency: string;
-          start_date: string;
-          end_date: string | null;
-          prescribed_by: string | null;
-          reason: string | null;
-          notes: string | null;
-          is_active: boolean;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          cat_id: string;
-          name: string;
-          dosage: string;
-          frequency: string;
-          start_date: string;
-          end_date?: string | null;
-          prescribed_by?: string | null;
-          reason?: string | null;
-          notes?: string | null;
-          is_active?: boolean;
-        };
-        Update: {
-          name?: string;
-          dosage?: string;
-          frequency?: string;
-          start_date?: string;
-          end_date?: string | null;
-          prescribed_by?: string | null;
-          reason?: string | null;
-          notes?: string | null;
-          is_active?: boolean;
-        };
-      };
-      treatments: {
-        Row: {
-          id: string;
-          cat_id: string;
-          treatment_type: string;
-          product_name: string;
-          date_administered: string;
-          next_due_date: string | null;
-          notes: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          cat_id: string;
-          treatment_type?: string;
-          product_name: string;
-          date_administered: string;
-          next_due_date?: string | null;
-          notes?: string | null;
-        };
-        Update: {
-          treatment_type?: string;
-          product_name?: string;
-          date_administered?: string;
-          next_due_date?: string | null;
-          notes?: string | null;
-        };
-      };
+          adoption_date?: string | null
+          allergies?: string[] | null
+          blood_type?: string | null
+          breed?: string | null
+          color_markings?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          gender?: string
+          id?: string
+          is_active?: boolean
+          is_neutered?: boolean
+          living_situation?: string
+          microchip_number?: string | null
+          name?: string
+          notes?: string | null
+          owner_id?: string
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cats_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feeding: {
         Row: {
-          id: string;
-          cat_id: string;
-          food_type: string;
-          brand: string | null;
-          product_name: string | null;
-          portion_size: string | null;
-          feeding_schedule: string | null;
-          started_on: string | null;
-          notes: string | null;
-          is_current: boolean;
-          created_at: string;
-        };
+          brand: string | null
+          cat_id: string
+          created_at: string
+          feeding_schedule: string | null
+          food_type: string
+          id: string
+          is_current: boolean
+          notes: string | null
+          portion_size: string | null
+          product_name: string | null
+          started_on: string | null
+        }
         Insert: {
-          id?: string;
-          cat_id: string;
-          food_type?: string;
-          brand?: string | null;
-          product_name?: string | null;
-          portion_size?: string | null;
-          feeding_schedule?: string | null;
-          started_on?: string | null;
-          notes?: string | null;
-          is_current?: boolean;
-        };
+          brand?: string | null
+          cat_id: string
+          created_at?: string
+          feeding_schedule?: string | null
+          food_type?: string
+          id?: string
+          is_current?: boolean
+          notes?: string | null
+          portion_size?: string | null
+          product_name?: string | null
+          started_on?: string | null
+        }
         Update: {
-          food_type?: string;
-          brand?: string | null;
-          product_name?: string | null;
-          portion_size?: string | null;
-          feeding_schedule?: string | null;
-          started_on?: string | null;
-          notes?: string | null;
-          is_current?: boolean;
-        };
-      };
-      photos: {
-        Row: {
-          id: string;
-          cat_id: string;
-          url: string;
-          caption: string | null;
-          taken_at: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          cat_id: string;
-          url: string;
-          caption?: string | null;
-          taken_at?: string | null;
-        };
-        Update: {
-          url?: string;
-          caption?: string | null;
-          taken_at?: string | null;
-        };
-      };
+          brand?: string | null
+          cat_id?: string
+          created_at?: string
+          feeding_schedule?: string | null
+          food_type?: string
+          id?: string
+          is_current?: boolean
+          notes?: string | null
+          portion_size?: string | null
+          product_name?: string | null
+          started_on?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feeding_cat_id_fkey"
+            columns: ["cat_id"]
+            isOneToOne: false
+            referencedRelation: "cats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entries: {
         Row: {
-          id: string;
-          cat_id: string;
-          title: string | null;
-          content: string;
-          entry_date: string;
-          tags: string[] | null;
-          created_at: string;
-        };
+          cat_id: string
+          content: string
+          created_at: string
+          entry_date: string
+          id: string
+          tags: string[] | null
+          title: string | null
+        }
         Insert: {
-          id?: string;
-          cat_id: string;
-          title?: string | null;
-          content: string;
-          entry_date?: string;
-          tags?: string[] | null;
-        };
+          cat_id: string
+          content: string
+          created_at?: string
+          entry_date?: string
+          id?: string
+          tags?: string[] | null
+          title?: string | null
+        }
         Update: {
-          title?: string | null;
-          content?: string;
-          entry_date?: string;
-          tags?: string[] | null;
-        };
-      };
-    };
+          cat_id?: string
+          content?: string
+          created_at?: string
+          entry_date?: string
+          id?: string
+          tags?: string[] | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_cat_id_fkey"
+            columns: ["cat_id"]
+            isOneToOne: false
+            referencedRelation: "cats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medications: {
+        Row: {
+          cat_id: string
+          created_at: string
+          dosage: string
+          end_date: string | null
+          frequency: string
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          prescribed_by: string | null
+          reason: string | null
+          start_date: string
+        }
+        Insert: {
+          cat_id: string
+          created_at?: string
+          dosage: string
+          end_date?: string | null
+          frequency: string
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          prescribed_by?: string | null
+          reason?: string | null
+          start_date: string
+        }
+        Update: {
+          cat_id?: string
+          created_at?: string
+          dosage?: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          prescribed_by?: string | null
+          reason?: string | null
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medications_cat_id_fkey"
+            columns: ["cat_id"]
+            isOneToOne: false
+            referencedRelation: "cats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photos: {
+        Row: {
+          caption: string | null
+          cat_id: string
+          created_at: string
+          id: string
+          taken_at: string | null
+          url: string
+        }
+        Insert: {
+          caption?: string | null
+          cat_id: string
+          created_at?: string
+          id?: string
+          taken_at?: string | null
+          url: string
+        }
+        Update: {
+          caption?: string | null
+          cat_id?: string
+          created_at?: string
+          id?: string
+          taken_at?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photos_cat_id_fkey"
+            columns: ["cat_id"]
+            isOneToOne: false
+            referencedRelation: "cats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string
+          id: string
+          preferred_weight_unit: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string
+          id: string
+          preferred_weight_unit?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          preferred_weight_unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      treatments: {
+        Row: {
+          cat_id: string
+          created_at: string
+          date_administered: string
+          id: string
+          next_due_date: string | null
+          notes: string | null
+          product_name: string
+          treatment_type: string
+        }
+        Insert: {
+          cat_id: string
+          created_at?: string
+          date_administered: string
+          id?: string
+          next_due_date?: string | null
+          notes?: string | null
+          product_name: string
+          treatment_type?: string
+        }
+        Update: {
+          cat_id?: string
+          created_at?: string
+          date_administered?: string
+          id?: string
+          next_due_date?: string | null
+          notes?: string | null
+          product_name?: string
+          treatment_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatments_cat_id_fkey"
+            columns: ["cat_id"]
+            isOneToOne: false
+            referencedRelation: "cats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vaccinations: {
+        Row: {
+          administered_by: string | null
+          batch_number: string | null
+          cat_id: string
+          created_at: string
+          date_administered: string
+          id: string
+          next_due_date: string | null
+          notes: string | null
+          vaccine_name: string
+        }
+        Insert: {
+          administered_by?: string | null
+          batch_number?: string | null
+          cat_id: string
+          created_at?: string
+          date_administered: string
+          id?: string
+          next_due_date?: string | null
+          notes?: string | null
+          vaccine_name: string
+        }
+        Update: {
+          administered_by?: string | null
+          batch_number?: string | null
+          cat_id?: string
+          created_at?: string
+          date_administered?: string
+          id?: string
+          next_due_date?: string | null
+          notes?: string | null
+          vaccine_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaccinations_cat_id_fkey"
+            columns: ["cat_id"]
+            isOneToOne: false
+            referencedRelation: "cats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vet_visits: {
+        Row: {
+          cat_id: string
+          clinic_name: string | null
+          cost: number | null
+          created_at: string
+          diagnosis: string | null
+          documents: string[] | null
+          follow_up_date: string | null
+          id: string
+          notes: string | null
+          reason: string
+          treatment: string | null
+          vet_name: string | null
+          visit_date: string
+        }
+        Insert: {
+          cat_id: string
+          clinic_name?: string | null
+          cost?: number | null
+          created_at?: string
+          diagnosis?: string | null
+          documents?: string[] | null
+          follow_up_date?: string | null
+          id?: string
+          notes?: string | null
+          reason: string
+          treatment?: string | null
+          vet_name?: string | null
+          visit_date: string
+        }
+        Update: {
+          cat_id?: string
+          clinic_name?: string | null
+          cost?: number | null
+          created_at?: string
+          diagnosis?: string | null
+          documents?: string[] | null
+          follow_up_date?: string | null
+          id?: string
+          notes?: string | null
+          reason?: string
+          treatment?: string | null
+          vet_name?: string | null
+          visit_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vet_visits_cat_id_fkey"
+            columns: ["cat_id"]
+            isOneToOne: false
+            referencedRelation: "cats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weight_logs: {
+        Row: {
+          cat_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          recorded_at: string
+          weight_kg: number
+        }
+        Insert: {
+          cat_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          recorded_at?: string
+          weight_kg: number
+        }
+        Update: {
+          cat_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          recorded_at?: string
+          weight_kg?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weight_logs_cat_id_fkey"
+            columns: ["cat_id"]
+            isOneToOne: false
+            referencedRelation: "cats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
     Views: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Functions: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Enums: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
+      [_ in never]: never
+    }
+  }
 }
 
-export type Profile = Database['public']['Tables']['profiles']['Row'];
-export type Cat = Database['public']['Tables']['cats']['Row'];
-export type WeightLog = Database['public']['Tables']['weight_logs']['Row'];
-export type Vaccination = Database['public']['Tables']['vaccinations']['Row'];
-export type VetVisit = Database['public']['Tables']['vet_visits']['Row'];
-export type Medication = Database['public']['Tables']['medications']['Row'];
-export type Treatment = Database['public']['Tables']['treatments']['Row'];
-export type Feeding = Database['public']['Tables']['feeding']['Row'];
-export type Photo = Database['public']['Tables']['photos']['Row'];
-export type JournalEntry = Database['public']['Tables']['journal_entries']['Row'];
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
+
+// Convenience type aliases
+export type Cat = Tables<'cats'>
+export type Profile = Tables<'profiles'>
+export type WeightLog = Tables<'weight_logs'>
+export type Vaccination = Tables<'vaccinations'>
+export type VetVisit = Tables<'vet_visits'>
+export type Medication = Tables<'medications'>
+export type Treatment = Tables<'treatments'>
+export type Feeding = Tables<'feeding'>
+export type Photo = Tables<'photos'>
+export type JournalEntry = Tables<'journal_entries'>

@@ -64,8 +64,8 @@ export default function MedicationsPage({ params }: { params: { catId: string } 
     const { error } = await supabase.from('medications').insert({
       cat_id: params.catId,
       name: formData.name,
-      dosage: formData.dosage || null,
-      frequency: formData.frequency || null,
+      dosage: formData.dosage || '',
+      frequency: formData.frequency || '',
       start_date: formData.startDate,
       end_date: formData.endDate || null,
       prescribed_by: formData.prescribedBy || null,
