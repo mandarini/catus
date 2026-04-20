@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Heart, Activity, Pill, Stethoscope, Image as ImageIcon, BookOpen, Smile, ArrowRight, PawPrint } from 'lucide-react';
+import { Heart, Activity, Pill, Stethoscope, Image as ImageIcon, BookOpen, Smile, ArrowRight } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -11,7 +12,7 @@ export default function Home() {
       <nav className="border-b border-border/40 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-2xl font-bold">
-            <PawPrint className="w-8 h-8 text-primary" />
+            <Image src="/logo.png" alt="Catus" width={32} height={32} />
             <span>Catus</span>
           </div>
           <div className="flex items-center gap-4">

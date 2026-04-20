@@ -114,7 +114,7 @@ export default function SettingsPage() {
       setIsLoading(false);
       return;
     }
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   if (isLoading) {

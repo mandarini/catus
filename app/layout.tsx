@@ -7,6 +7,10 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Catus - Cat Health & Life Tracker',
   description: 'Track your cat\'s health, vaccinations, vet visits, medications, and memories all in one place.',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
   openGraph: {
     title: 'Catus - Cat Health & Life Tracker',
     description: 'Track your cat\'s health, vaccinations, vet visits, medications, and memories all in one place.',

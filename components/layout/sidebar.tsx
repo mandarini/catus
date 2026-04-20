@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { PawPrint, Chrome as Home, Settings, Plus, LogOut } from 'lucide-react';
+import { Chrome as Home, Settings, Plus, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -25,7 +26,7 @@ export function Sidebar({ userDisplayName = 'User', onLogout }: SidebarProps) {
     <aside className="w-64 border-r border-border bg-card h-screen sticky top-0 flex flex-col">
       {/* Logo */}
       <Link href="/dashboard" className="px-6 py-6 border-b border-border flex items-center gap-3 hover:bg-muted transition-colors">
-        <PawPrint className="w-8 h-8 text-primary" />
+        <Image src="/logo.png" alt="Catus" width={32} height={32} />
         <span className="text-2xl font-bold">Catus</span>
       </Link>
 

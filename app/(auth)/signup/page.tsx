@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Heart, CircleAlert as AlertCircle } from 'lucide-react';
+import Image from 'next/image';
+import { CircleAlert as AlertCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function SignupPage() {
@@ -33,9 +34,7 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/20">
-              <Heart className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <Image src="/logo.png" alt="Catus" width={40} height={40} className="rounded-full" />
             <span className="text-2xl font-bold tracking-tight">Catus</span>
           </Link>
           <h1 className="mt-6 text-2xl font-bold text-foreground">Create your account</h1>
