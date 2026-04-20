@@ -1,16 +1,6 @@
-/*
-  # Create storage buckets and policies
-
-  1. Buckets
-    - `cat-photos` — public bucket for cat profile pics and gallery photos
-    - `vet-documents` — private bucket for vet visit PDFs and documents
-
-  2. Security
-    - Authenticated users can upload to their own folder ({user_id}/{cat_id}/*)
-    - cat-photos: publicly readable (no auth needed for viewing)
-    - vet-documents: only the owner can read (signed URLs)
-    - Max file sizes enforced via policies
-*/
+-- Create storage buckets and policies
+-- Buckets: cat-photos (public), vet-documents (private)
+-- Authenticated users can upload to their own folder ({user_id}/{cat_id}/)
 
 -- Create buckets
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
