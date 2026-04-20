@@ -40,3 +40,9 @@ next-env.d.ts
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated files
+supabase/all_migrations.sql
+
+# Claude Code
+.claude/

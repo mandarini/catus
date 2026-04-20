@@ -7,7 +7,7 @@ import { Plus, Heart, Pill, Calendar } from 'lucide-react';
 
 export default function DashboardPage() {
   // TODO: Fetch user's cats from Supabase
-  const cats = [];
+  const cats: any[] = [];
 
   return (
     <div className="p-8">
