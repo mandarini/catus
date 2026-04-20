@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 13%;
+    --primary: 260 84% 61%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 340 65% 68%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 220 90% 56%;
+    --accent-foreground: 0 0% 100%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 13%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 92%;
+    --input: 0 0% 95%;
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 45%;
+    --ring: 260 84% 61%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 0 0% 8%;
+    --foreground: 0 0% 94%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 94%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 94%;
+    --primary: 260 84% 61%;
+    --primary-foreground: 0 0% 8%;
+    --secondary: 340 65% 68%;
+    --secondary-foreground: 0 0% 8%;
+    --accent: 220 90% 56%;
+    --accent-foreground: 0 0% 8%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 13%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 20%;
+    --input: 0 0% 18%;
+    --muted: 0 0% 25%;
+    --muted-foreground: 0 0% 65%;
+    --ring: 260 84% 61%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  h1 {
+    @apply text-4xl font-bold tracking-tight;
+  }
+
+  h2 {
+    @apply text-3xl font-bold tracking-tight;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+
+  h4 {
+    @apply text-xl font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .transition-smooth {
+    @apply transition-all duration-200 ease-out;
+  }
+}
